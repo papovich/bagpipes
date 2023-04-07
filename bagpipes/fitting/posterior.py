@@ -15,6 +15,9 @@ from ..models.model_galaxy import model_galaxy
 
 from .. import utils
 
+''' CJP added '''
+from .cjp_funcs import _calc_beta
+''' ''' 
 
 class posterior(object):
     """ Provides access to the outputs from fitting models to data and
@@ -158,10 +161,12 @@ class posterior(object):
                                          filt_list=self.galaxy.filt_list,
                                          spec_wavs=self.galaxy.spec_wavs,
                                          index_list=self.galaxy.index_list)
-
         all_names = ["photometry", "spectrum", "spectrum_full", "uvj",
                      "indices"]
-
+        ''' CJP added ''' 
+        all_names = ["photometry", "spectrum", "spectrum_full", "nebular_full", "stellar_only", "uvj",
+                     "indices"]
+        ''' '''
         all_model_keys = dir(self.model_galaxy)
         quantity_names = [q for q in all_names if q in all_model_keys]
 
@@ -169,6 +174,15 @@ class posterior(object):
             size = getattr(self.model_galaxy, q).shape[0]
             self.samples[q] = np.zeros((self.n_samples, size))
 
+        
+        ''' CJP added '''
+        quantity_names.append("beta_full")
+        self.samples["beta_full"] = np.zeros(self.n_samples)
+        if "nebular_full" in dir(self.model_galaxy) : 
+            quantity_names.append("beta_stellar")
+            self.samples["beta_stellar"] = np.zeros(self.n_samples)
+        ''' '''
+        
         if self.galaxy.photometry_exists:
             self.samples["chisq_phot"] = np.zeros(self.n_samples)
 
@@ -211,7 +225,19 @@ class posterior(object):
                     spectrum = getattr(self.fitted_model.model_galaxy, q)[:, 1]
                     self.samples[q][i] = spectrum
                     continue
-
+                ''' CJP added ''' 
+                if q == "beta_full" :
+                    spec = getattr(self.fitted_model.model_galaxy, 'spectrum_full')
+                    wavs = getattr(self.fitted_model.model_galaxy, 'wavelengths')
+                    self.samples[q][i] = _calc_beta(wavs, spec)
+                    continue
+                
+                if q == "beta_stellar" :
+                    spec = getattr(self.fitted_model.model_galaxy, 'stellar_only')
+                    wavs = getattr(self.fitted_model.model_galaxy, 'wavelengths')
+                    self.samples[q][i] = _calc_beta(wavs, spec)
+                    continue
+                ''' ''' 
                 self.samples[q][i] = getattr(self.fitted_model.model_galaxy, q)
 
     def predict(self, filt_list=None, spec_wavs=None, spec_units="ergscma",

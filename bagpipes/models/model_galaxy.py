@@ -259,6 +259,8 @@ class model_galaxy(object):
         _calculate_spectrum methods generate observables using this
         internal full spectrum. """
 
+        """ CJP added stellar and nebular spectra separately """
+        
         t_bc = 0.01
         if "t_bc" in list(model_comp):
             t_bc = model_comp["t_bc"]
@@ -267,6 +269,12 @@ class model_galaxy(object):
         em_lines = np.zeros(config.line_wavs.shape)
 
         if self.nebular:
+            ''' added by CJP: '''
+            stellar_only = np.copy(spectrum)
+            stellar_only_bc = np.copy(spectrum_bc)
+            nebular = np.zeros_like(spectrum)
+            '''''' 
+        
             grid = np.copy(self.sfh.ceh.grid)
 
             if "metallicity" in list(model_comp["nebular"]):
@@ -284,9 +292,16 @@ class model_galaxy(object):
 
             # All stellar emission below 912A goes into nebular emission
             spectrum_bc[self.wavelengths < 912.] = 0.
+
+
             spectrum_bc += self.nebular.spectrum(grid, t_bc,
                                                  model_comp["nebular"]["logU"])
-
+            
+            ''' CJP added '''
+            stellar_only_bc[self.wavelengths < 912.] = 0.
+            nebular_bc =  self.nebular.spectrum(grid, t_bc,
+                                                    model_comp["nebular"]["logU"])
+            ''''''
         # Add attenuation due to stellar birth clouds.
         if self.dust_atten:
             dust_flux = 0.  # Total attenuated flux for energy balance.
@@ -302,12 +317,20 @@ class model_galaxy(object):
                                       x=self.wavelengths)
 
                 spectrum_bc = spectrum_bc_dust
+                ''' CJP added '''
+                if self.nebular : 
+                    stellar_only_bc *= bc_trans_red
+                    nebular_bc *= bc_trans_red
+                ''''''
 
             # Attenuate emission line fluxes.
             bc_Av = eta*model_comp["dust"]["Av"]
             em_lines *= 10**(-bc_Av*self.dust_atten.A_line/2.5)
 
         spectrum += spectrum_bc  # Add birth cloud spectrum to spectrum.
+        if self.nebular :
+            nebular += nebular_bc
+            stellar_only += stellar_only_bc
 
         # Add attenuation due to the diffuse ISM.
         if self.dust_atten:
@@ -331,7 +354,12 @@ class model_galaxy(object):
 
             spectrum += dust_flux*self.dust_emission.spectrum(qpah, umin,
                                                               gamma)
-
+            ''' CJP added ''' 
+            if self.nebular :
+                nebular *= trans
+                stellar_only *= trans
+            ''''''
+            
         spectrum *= self.igm.trans(model_comp["redshift"])
 
         if self.dust_atten:
@@ -363,6 +391,20 @@ class model_galaxy(object):
 
         self.line_fluxes = dict(zip(config.line_names, em_lines))
         self.spectrum_full = spectrum
+
+        ''' CJP added : '''
+        if self.nebular :
+            nebular *= self.igm.trans(model_comp["redshift"])
+            nebular /= self.lum_flux*(1. + model_comp["redshift"])
+            nebular *= 3.826*10**33
+            self.nebular_full = nebular
+
+            stellar_only *= self.igm.trans(model_comp["redshift"])
+            stellar_only /= self.lum_flux*(1. + model_comp["redshift"])
+            stellar_only *= 3.826*10**33
+            self.stellar_only = stellar_only
+
+        ''''''
 
     def _calculate_photometry(self, redshift, uvj=False):
         """ This method generates predictions for observed photometry.

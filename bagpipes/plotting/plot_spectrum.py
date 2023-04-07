@@ -24,6 +24,11 @@ def add_spectrum(spectrum, ax, x_ticks=None, zorder=4, z_non_zero=True,
 
     if y_scale is None:
         y_scale = int(np.log10(ymax))-1
+    ''' CJP added this to stop a bug ''' 
+    if y_scale <= -19 :
+            y_scale = -19
+    #print(y_scale)
+    ''''''
 
     ax.set_ylim(0., ymax*10**-y_scale)
     ax.set_xlim(spectrum[0, 0], spectrum[-1, 0])

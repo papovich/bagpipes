@@ -22,7 +22,7 @@ def plot_spectrum_posterior(fit, show=False, save=True):
 
     # First plot the observational data
     fig, ax, y_scale = plot_galaxy(fit.galaxy, show=False, return_y_scale=True)
-
+    
     if fit.galaxy.spectrum_exists:
         add_spectrum_posterior(fit, ax[0], zorder=6, y_scale=y_scale[0])
 
