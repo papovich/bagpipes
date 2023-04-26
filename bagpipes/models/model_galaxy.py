@@ -16,6 +16,9 @@ from .dust_emission_model import dust_emission
 from .dust_attenuation_model import dust_attenuation
 from .nebular_model import nebular
 from .igm_model import igm
+''' CJP added '''
+from .damping_wing import damping_wing
+''' ''' 
 from .agn_model import agn
 from .star_formation_history import star_formation_history
 from ..input.spectral_indices import measure_index
@@ -103,6 +106,13 @@ class model_galaxy(object):
         self.dust_emission = False
         self.agn = False
 
+        ''' CJP added '''
+        self.damping_wing = False
+        if "damping_wing" in list(model_components):
+            self.damping_wing = damping_wing(self.wavelengths,model_components["redshift"], model_components["damping_wing"])
+        ''' ''' 
+ 
+        
         if "nebular" in list(model_components):
             if "velshift" not in model_components["nebular"]:
                 model_components["nebular"]["velshift"] = 0.
@@ -277,6 +287,13 @@ class model_galaxy(object):
             agn_spec = self.agn.spectrum
             agn_spec *= self.igm.trans(self.model_comp["redshift"])
 
+            ''' CJP added ''' 
+            if self.damping_wing :
+                agn_spec *= self.damping_wing.attenuation
+
+            ''' '''
+   
+            
             self.spectrum_full += agn_spec/(1. + self.model_comp["redshift"])
 
             if self.spec_wavs is not None:
@@ -311,7 +328,6 @@ class model_galaxy(object):
 
         """ CJP added stellar and nebular spectra separately """
 
-        
         t_bc = 0.01
         if "t_bc" in list(model_comp):
             t_bc = model_comp["t_bc"]
@@ -320,12 +336,12 @@ class model_galaxy(object):
         em_lines = np.zeros(config.line_wavs.shape)
 
         if self.nebular:
+            
             ''' added by CJP: '''
             stellar_only = np.copy(spectrum)
             stellar_only_bc = np.copy(spectrum_bc)
             nebular = np.zeros_like(spectrum)
             '''''' 
- 
             grid = np.copy(self.sfh.ceh.grid)
 
             if "metallicity" in list(model_comp["nebular"]):
@@ -352,6 +368,7 @@ class model_galaxy(object):
                                                     model_comp["nebular"]["logU"])
             ''''''
  
+            
         # Add attenuation due to stellar birth clouds.
         if self.dust_atten:
             dust_flux = 0.  # Total attenuated flux for energy balance.
@@ -367,7 +384,6 @@ class model_galaxy(object):
                                       x=self.wavelengths)
 
                 spectrum_bc = spectrum_bc_dust
-
                 ''' CJP added '''
                 if self.nebular : 
                     stellar_only_bc *= bc_trans_red
@@ -379,6 +395,11 @@ class model_galaxy(object):
             em_lines *= 10**(-bc_Av*self.dust_atten.A_line/2.5)
 
         spectrum += spectrum_bc  # Add birth cloud spectrum to spectrum.
+        ''' CJP added ''' 
+        if self.nebular :
+            nebular += nebular_bc
+            stellar_only += stellar_only_bc
+        ''' ''' 
 
         # Add attenuation due to the diffuse ISM.
         if self.dust_atten:
@@ -407,9 +428,19 @@ class model_galaxy(object):
             if self.nebular :
                 nebular *= trans
                 stellar_only *= trans
+
+        if self.damping_wing :
+            atten = self.damping_wing.attenuation
+            damped_spectrum = spectrum * atten
+            spectrum = damped_spectrum
+            self.spectrum_bc = spectrum_bc*atten
+
+            if self.nebular :
+                nebular *= atten
+                stellar_only *= atten
             ''''''
   
-
+                
         spectrum *= self.igm.trans(model_comp["redshift"])
 
         if self.dust_atten:
@@ -455,7 +486,10 @@ class model_galaxy(object):
             stellar_only *= 3.826*10**33
             self.stellar_only = stellar_only
 
+            
+
         ''''''
+
 
         
     def _calculate_photometry(self, redshift, uvj=False):

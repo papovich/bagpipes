@@ -65,9 +65,8 @@ def make_bins(midpoints, make_rhs=False):
 
 
 # Set up necessary variables for cosmological calculations.
-cosmo = FlatLambdaCDM(H0=67.4, Om0=0.315) # Planck 2018
-#cosmo = FlatLambdaCDM(H0=70., Om0=0.3)
-z_array = np.arange(0., 100., 0.01)
+cosmo = FlatLambdaCDM(H0=67.4, Om0=0.315)
+z_array = np.arange(0., 110., 0.01)
 age_at_z = cosmo.age(z_array).value
 ldist_at_z = cosmo.luminosity_distance(z_array).value
 

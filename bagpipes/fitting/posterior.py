@@ -3,7 +3,7 @@ from __future__ import print_function, division, absolute_import
 import numpy as np
 
 import os
-import deepdish as dd
+import h5py
 
 from copy import deepcopy
 
@@ -17,7 +17,8 @@ from .. import utils
 
 ''' CJP added '''
 from .cjp_funcs import _calc_beta
-''' ''' 
+''' '''
+
 
 class posterior(object):
     """ Provides access to the outputs from fitting models to data and
@@ -51,11 +52,13 @@ class posterior(object):
             raise IOError("Fit results not found for " + self.galaxy.ID + ".")
 
         # Reconstruct the fitted model.
-        self.fit_instructions = dd.io.load(fname, group="/fit_instructions")
+        file = h5py.File(fname, "r")
+
+        self.fit_instructions = eval(file.attrs["fit_instructions"])
         self.fitted_model = fitted_model(self.galaxy, self.fit_instructions)
 
         # 2D array of samples for the fitted parameters only.
-        self.samples2d = dd.io.load(fname, group="/samples2d")
+        self.samples2d = np.array(file["samples2d"])
 
         # If fewer than n_samples exist in posterior, reduce n_samples
         if self.samples2d.shape[0] < self.n_samples:
@@ -131,7 +134,7 @@ class posterior(object):
 
         quantity_names = ["stellar_mass", "formed_mass", "sfr", "ssfr", "nsfr",
                           "mass_weighted_age", "tform", "tquench",
-                          "mass_weighted_metallicity"]
+                          "mass_weighted_zmet"]
 
         for q in quantity_names:
             self.samples[q] = np.zeros(self.n_samples)
@@ -161,12 +164,15 @@ class posterior(object):
                                          filt_list=self.galaxy.filt_list,
                                          spec_wavs=self.galaxy.spec_wavs,
                                          index_list=self.galaxy.index_list)
+
         all_names = ["photometry", "spectrum", "spectrum_full", "uvj",
                      "indices"]
         ''' CJP added ''' 
         all_names = ["photometry", "spectrum", "spectrum_full", "nebular_full", "stellar_only", "uvj",
                      "indices"]
         ''' '''
+
+
         all_model_keys = dir(self.model_galaxy)
         quantity_names = [q for q in all_names if q in all_model_keys]
 
@@ -174,7 +180,6 @@ class posterior(object):
             size = getattr(self.model_galaxy, q).shape[0]
             self.samples[q] = np.zeros((self.n_samples, size))
 
-        
         ''' CJP added '''
         quantity_names.append("beta_full")
         self.samples["beta_full"] = np.zeros(self.n_samples)
@@ -182,7 +187,8 @@ class posterior(object):
             quantity_names.append("beta_stellar")
             self.samples["beta_stellar"] = np.zeros(self.n_samples)
         ''' '''
-        
+  
+            
         if self.galaxy.photometry_exists:
             self.samples["chisq_phot"] = np.zeros(self.n_samples)
 
@@ -238,6 +244,7 @@ class posterior(object):
                     self.samples[q][i] = _calc_beta(wavs, spec)
                     continue
                 ''' ''' 
+  
                 self.samples[q][i] = getattr(self.fitted_model.model_galaxy, q)
 
     def predict(self, filt_list=None, spec_wavs=None, spec_units="ergscma",

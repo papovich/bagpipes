@@ -34,10 +34,12 @@ def _calc_beta( wavs, flambda) :
     x = wavs[ok]
     y = flambda[ok]
     mny = np.mean(y)
+    if mny==0 : mny=1
     y /= mny
 
     p0 = [ 1.0, -1.0]
-
+    #print(flambda)
+    #print(x, y)
     popt, pcov = curve_fit(_func, x, y )
 
     popt[0] *= mny
