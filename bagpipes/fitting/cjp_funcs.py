@@ -1,8 +1,19 @@
 import numpy as np
-from  scipy.optimize import curve_fit
+from  scipy.optimize import curve_fit, trapezoid
 
 def _func( x, f0, beta ) :
     return( f0 * x**beta ) 
+
+def _calc_nebfraction( wavs, spec, neb, wavrange = (1217, 3650) ) :
+    ''' written by CJP to compute the fraction of the nebular emission (lines + continuum) to the total light)
+       for each spectrum.  The default range is from the Ly-alpha limit to the Balmer limit '''
+
+    ok = (wavs > wavrange[0]) & (wavs < wavrange[1])
+    neb_tot = trapezoid( neb[ok], wavs[ok])
+    tot_tot = trapezoid( spec[ok], wavs[ok])
+
+    return( neb_tot / tot_tot) 
+    
 
 def _calc_beta( wavs, flambda) :
     """ written by CJP to take a spectrum and return beta, the UV slope 

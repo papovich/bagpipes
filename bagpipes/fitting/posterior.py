@@ -16,7 +16,7 @@ from ..models.model_galaxy import model_galaxy
 from .. import utils
 
 ''' CJP added '''
-from .cjp_funcs import _calc_beta
+from .cjp_funcs import _calc_beta, _calc_nebfraction
 ''' '''
 
 
@@ -168,8 +168,9 @@ class posterior(object):
         all_names = ["photometry", "spectrum", "spectrum_full", "uvj",
                      "indices"]
         ''' CJP added ''' 
-        all_names = ["photometry", "spectrum", "spectrum_full", "nebular_full", "stellar_only", "uvj",
-                     "indices"]
+        all_names = ["photometry", "spectrum", "spectrum_full",
+                         "nebular_full", "stellar_only", "nebular_fraction",  "uvj",
+                         "indices"]
         ''' '''
 
 
@@ -232,6 +233,12 @@ class posterior(object):
                     self.samples[q][i] = spectrum
                     continue
                 ''' CJP added ''' 
+                if q == "nebular_fraction" :
+                    spec = getattr(self.fitted_model.model_galaxy, 'spectrum_full')
+                    neb = getattr(self.fitted_model.model_galaxy, 'nebular_full')
+                    wavs = getattr(self.fitted_model.model_galaxy, 'wavelengths')
+                    self.samples[q][i] = _calc_nebfraction(wavs, spec )
+                    continue
                 if q == "beta_full" :
                     spec = getattr(self.fitted_model.model_galaxy, 'spectrum_full')
                     wavs = getattr(self.fitted_model.model_galaxy, 'wavelengths')
