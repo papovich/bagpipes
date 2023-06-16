@@ -83,7 +83,14 @@ class fit(object):
             self.posterior = posterior(self.galaxy, run=run,
                                        n_samples=n_posterior)
 
-            self.fit_instructions = eval(file.attrs["fit_instructions"])
+            ''' CJP added this to cut out R_curve if it exists '''
+            attrs = file.attrs["fit_instructions"]
+            gattrs = attrs.split(", 'R_curve'")
+            if len(gattrs) > 1 :
+                attrs = gattrs[0] + '}'
+            
+            self.fit_instructions = eval(attrs)
+            #self.fit_instructions = eval(file.attrs["fit_instructions"])
 
             for k in file.keys():
                 self.results[k] = np.array(file[k])

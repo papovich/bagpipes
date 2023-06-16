@@ -54,7 +54,15 @@ class posterior(object):
         # Reconstruct the fitted model.
         file = h5py.File(fname, "r")
 
-        self.fit_instructions = eval(file.attrs["fit_instructions"])
+        ''' CJP added this to cut out R_curve if it exists '''
+        attrs = file.attrs["fit_instructions"]
+        gattrs = attrs.split(", 'R_curve'")
+        if len(gattrs) > 1 :
+            attrs = gattrs[0] + '}'
+            
+        self.fit_instructions = eval(attrs)
+        ''' ''' 
+        #self.fit_instructions = eval(file.attrs["fit_instructions"])
         self.fitted_model = fitted_model(self.galaxy, self.fit_instructions)
 
         # 2D array of samples for the fitted parameters only.
@@ -183,10 +191,12 @@ class posterior(object):
 
         ''' CJP added '''
         quantity_names.append("beta_full")
+        quantity_names.append("nebular_fraction")
         self.samples["beta_full"] = np.zeros(self.n_samples)
         if "nebular_full" in dir(self.model_galaxy) : 
             quantity_names.append("beta_stellar")
             self.samples["beta_stellar"] = np.zeros(self.n_samples)
+            self.samples["nebular_fraction"] = np.zeros(self.n_samples)
         ''' '''
   
             
@@ -232,12 +242,12 @@ class posterior(object):
                     spectrum = getattr(self.fitted_model.model_galaxy, q)[:, 1]
                     self.samples[q][i] = spectrum
                     continue
-                ''' CJP added ''' 
+                ''' CJP added '''
                 if q == "nebular_fraction" :
                     spec = getattr(self.fitted_model.model_galaxy, 'spectrum_full')
                     neb = getattr(self.fitted_model.model_galaxy, 'nebular_full')
                     wavs = getattr(self.fitted_model.model_galaxy, 'wavelengths')
-                    self.samples[q][i] = _calc_nebfraction(wavs, spec )
+                    self.samples[q][i] = _calc_nebfraction(wavs, spec, neb )
                     continue
                 if q == "beta_full" :
                     spec = getattr(self.fitted_model.model_galaxy, 'spectrum_full')

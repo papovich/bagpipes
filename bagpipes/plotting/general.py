@@ -60,7 +60,12 @@ latex_names = {"redshift": "z",
                "scaling": "s",
                "t_bc": "t_{BC}",
                "B": "B",
-               "delta": "\delta"}
+               "delta": "\delta",
+               "logU": "\\log U",
+               "fesc": "f(\mathrm{esc})", 
+               "R": "R",
+               "logN_HI": "\\mathrm{log_{10}}N(\\mathrm{HI})",
+               "x_HI": "x(\\mathrm{HI})"}
 
 latex_units = {"metallicity": "Z_{\\odot}",
                "massformed": "M_{\\odot})}",
@@ -77,12 +82,15 @@ latex_units = {"metallicity": "Z_{\\odot}",
                "mass_weighted_age": "\\mathrm{Gyr}",
                "tform": "\\mathrm{Gyr}",
                "tau_q": "\\mathrm{Gyr}",
+               "R": "\\mathrm{cMpc}",
+               "logN_HI": "\mathrm{cm}^{-2}",
                "tquench": "\\mathrm{Gyr}",
                "t_bc": "\\mathrm{Gyr}"}
 
 latex_comps = {"dblplaw": "dpl",
                "exponential": "exp",
                "constant": "const",
+               "damping_wing": "IGM",
                "delayed": "del",
                "calibration": "calib",
                "nebular": "neb",
@@ -226,15 +234,19 @@ def fix_param_names(fit_params):
             param = split[1]
 
         if param in list(latex_names):
+            #print('param in latex_names:', param)
             new_param = latex_names[param]
 
-            if comp is not None:
+            if (comp is not None) and (param != 'logN_HI'):
                 if comp in list(latex_comps):
+                    #print('comp is in latex_comps: ', comp)
                     new_param += "_\\mathrm{" + latex_comps[comp] + "}"
                 else:
+                    #print('comp is not in latex_comps: ', comp)
                     new_param += "_\\mathrm{" + comp + "}"
 
             if param in list(latex_units):
+                #print('param is in latex_units: ', param)
                 new_param = new_param + "/" + latex_units[param]
 
             new_param = "$" + new_param + "$"
@@ -242,6 +254,7 @@ def fix_param_names(fit_params):
         else:
             new_param = fit_param
 
+        #print('new_param is : ', new_param)
         new_params.append(new_param)
 
     if len(new_params) == 1:

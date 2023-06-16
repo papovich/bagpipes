@@ -125,7 +125,10 @@ class star_formation_history:
         self.stellar_mass = np.log10(np.sum(self.live_frac_grid*self.ceh.grid))
         self.formed_mass = np.log10(np.sum(self.ceh.grid))
 
-        age_mask = (self.ages < 10**8)
+        ''' CJP changed to this <10**7 per K. Guo's slack message ''' 
+        age_mask = (self.ages < 10**7)
+        ''' '''
+        # age_mask = (self.ages < 10**8)
         self.sfr = np.sum(self.sfh[age_mask]*self.age_widths[age_mask])
         self.sfr /= self.age_widths[age_mask].sum()
         self.ssfr = np.log10(self.sfr) - self.stellar_mass

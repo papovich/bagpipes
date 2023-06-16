@@ -23,6 +23,15 @@ from .agn_model import agn
 from .star_formation_history import star_formation_history
 from ..input.spectral_indices import measure_index
 
+'''
+Updates:
+
+ CJP added fix from Alexa Morales to fit for f_esc to control the
+ escape fraction of ionizing radiation (reduces nebular component by
+ factor of 1 - f_esc.  f_esc = 0 means none of it escapes and 100% is
+ converted into nebular spectrum). 
+'''
+
 
 class model_galaxy(object):
     """ Builds model galaxy spectra and calculates predictions for
@@ -107,9 +116,10 @@ class model_galaxy(object):
         self.agn = False
 
         ''' CJP added '''
-        self.damping_wing = False
         if "damping_wing" in list(model_components):
             self.damping_wing = damping_wing(self.wavelengths,model_components["redshift"], model_components["damping_wing"])
+        else :
+            self.damping_wing=False
         ''' ''' 
  
         
@@ -265,6 +275,8 @@ class model_galaxy(object):
         self.sfh.update(model_components)
         if self.dust_atten:
             self.dust_atten.update(model_components["dust"])
+        if self.damping_wing:
+            self.damping_wing.update(model_components["redshift"], model_components["damping_wing"])
 
         # If the SFH is unphysical do not caclulate the full spectrum
         if self.sfh.unphysical:
@@ -328,6 +340,8 @@ class model_galaxy(object):
 
         """ CJP added stellar and nebular spectra separately """
 
+        ''' CJP added Alexa M. update to include fesc '''
+
         t_bc = 0.01
         if "t_bc" in list(model_comp):
             t_bc = model_comp["t_bc"]
@@ -354,18 +368,26 @@ class model_galaxy(object):
                 self.neb_sfh.update(neb_comp)
                 grid = self.neb_sfh.ceh.grid
 
+            ''' CJP added this: '''
+            if "nebular" in list(model_comp["nebular"]) : 
+                fesc = model_comp["nebular"]["fesc"]
+            else :
+                # by default, 0% escapes: 
+                fesc = 0.0
+            ''' '''
+                
             em_lines += self.nebular.line_fluxes(grid, t_bc,
-                                                 model_comp["nebular"]["logU"])
+                                                 model_comp["nebular"]["logU"]) * (1 - fesc)
 
             # All stellar emission below 912A goes into nebular emission
             spectrum_bc[self.wavelengths < 912.] = 0.
             spectrum_bc += self.nebular.spectrum(grid, t_bc,
-                                                 model_comp["nebular"]["logU"])
+                                                 model_comp["nebular"]["logU"]) * (1 - fesc) 
 
             ''' CJP added '''
             stellar_only_bc[self.wavelengths < 912.] = 0.
             nebular_bc =  self.nebular.spectrum(grid, t_bc,
-                                                    model_comp["nebular"]["logU"])
+                                                    model_comp["nebular"]["logU"]) * (1 - fesc)
             ''''''
  
             
@@ -542,6 +564,7 @@ class model_galaxy(object):
             redshifted_wavs = zplusone*self.wavelengths
 
         if "R_curve" in list(model_comp):
+
             oversample = 4  # Number of samples per FWHM at resolution R
             new_wavs = self._get_R_curve_wav_sampling(oversample=oversample)
 
