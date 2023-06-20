@@ -191,9 +191,9 @@ class posterior(object):
 
         ''' CJP added '''
         quantity_names.append("beta_full")
-        quantity_names.append("nebular_fraction")
         self.samples["beta_full"] = np.zeros(self.n_samples)
         if "nebular_full" in dir(self.model_galaxy) : 
+            quantity_names.append("nebular_fraction")
             quantity_names.append("beta_stellar")
             self.samples["beta_stellar"] = np.zeros(self.n_samples)
             self.samples["nebular_fraction"] = np.zeros(self.n_samples)

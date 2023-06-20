@@ -369,7 +369,7 @@ class model_galaxy(object):
                 grid = self.neb_sfh.ceh.grid
 
             ''' CJP added this: '''
-            if "nebular" in list(model_comp["nebular"]) : 
+            if "fesc" in list(model_comp["nebular"]) : 
                 fesc = model_comp["nebular"]["fesc"]
             else :
                 # by default, 0% escapes: 
