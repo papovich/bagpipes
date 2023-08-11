@@ -83,6 +83,12 @@ class prior(object):
         value = limits[0] + (limits[1] - limits[0])*value
         return value
 
+    def squared(self, value, limits, hyper_params):
+        """ Uniform prior in x**2 where x is the parameter. """
+
+        value = limits[0]**2 + (limits[1]**2 - limits[0]**2)*value
+        return value
+
     def log_10(self, value, limits, hyper_params):
         """ Uniform prior in log_10(x) where x is the parameter. """
         value = 10**((np.log10(limits[1]/limits[0]))*value
@@ -97,6 +103,11 @@ class prior(object):
     def pow_10(self, value, limits, hyper_params):
         """ Uniform prior in 10**x where x is the parameter. """
         value = np.log10((10**limits[1] - 10**limits[0])*value + 10**limits[0])
+        return value
+
+    def pow_e(self, value, limits, hyper_params):
+        """ Uniform prior in 2**x where x is the parameter. """
+        value = np.log((np.exp( limits[1]) - np.exp( limits[0] )) *value + np.exp(limits[0]) )
         return value
 
     def recip(self, value, limits, hyper_params):

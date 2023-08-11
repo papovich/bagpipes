@@ -83,7 +83,7 @@ class fitted_model(object):
                 prior_key = all_keys[i] + "_prior"
                 if prior_key in list(all_keys):
                     self.pdfs.append(all_vals[all_keys.index(prior_key)])
-
+                    
                 else:
                     self.pdfs.append("uniform")
 

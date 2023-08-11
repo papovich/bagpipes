@@ -225,8 +225,17 @@ class model_galaxy(object):
         R_curve = self.model_comp["R_curve"]
         x = [0.95*self.spec_wavs[0]]
 
+        ''' CJP added this to allow to broaden resolution of lines '''
+        useR = np.copy(R_curve[:,1])
+        if "LSF_corr" in list(self.model_comp) :
+            useR *= self.model_comp["LSF_corr"]**2
+        ''' '''
+
         while x[-1] < 1.05*self.spec_wavs[-1]:
-            R_val = np.interp(x[-1], R_curve[:, 0], R_curve[:, 1])
+            ''' CJP changed :  '''
+            # R_val = np.interp(x[-1], R_curve[:, 0], R_curve[:, 1])
+            R_val = np.interp(x[-1], R_curve[:, 0], useR )
+            ''' ''' 
             dwav = x[-1]/R_val/oversample
             x.append(x[-1] + dwav)
 
@@ -564,7 +573,7 @@ class model_galaxy(object):
             redshifted_wavs = zplusone*self.wavelengths
 
         if "R_curve" in list(model_comp):
-
+            
             oversample = 4  # Number of samples per FWHM at resolution R
             new_wavs = self._get_R_curve_wav_sampling(oversample=oversample)
 

@@ -146,7 +146,14 @@ class fit(object):
             print("\nCompleted in " + str("%.1f" % runtime) + " seconds.\n")
 
             # Load MultiNest outputs and save basic quantities to file.
+
+            # CJP added
+            conv = lambda x: 1e-100 if x[-4]=="-" else float(x)
+            samples2d = np.loadtxt(self.fname + "post_equal_weights.dat", converters=conv, encoding=None)
+            ''' original: 
             samples2d = np.loadtxt(self.fname + "post_equal_weights.dat")
+            '''
+            
             lnz_line = open(self.fname + "stats.dat").readline().split()
 
             file = h5py.File(self.fname[:-1] + ".h5", "w")
