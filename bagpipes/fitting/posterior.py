@@ -17,6 +17,8 @@ from .. import utils
 
 ''' CJP added '''
 from .cjp_funcs import _calc_beta, _calc_nebfraction
+# CJP added this to make R_curve work:
+from astropy.io import fits as pyfits
 ''' '''
 
 
@@ -57,10 +59,16 @@ class posterior(object):
         ''' CJP added this to cut out R_curve if it exists '''
         attrs = file.attrs["fit_instructions"]
         gattrs = attrs.split(", 'R_curve'")
+        # old way, but requires that R_curve is last.  If not, it doesn't work!
         if len(gattrs) > 1 :
-            attrs = gattrs[0] + '}'
-            
+            attrs = gattrs[0] + ",'R_curve': (0.5, 1.5)}"
+        # new way, fugly:
+        #attrs = attrs.replace("'R_curve': array([[ 5000.      ,    90.97187 ],\n       [ 5055.      ,    88.99802 ],\n       [ 5110.      ,    87.095604],\n       ...,\n       [59890.      ,   419.97052 ],\n       [59945.      ,   420.8057  ],\n       [60000.      ,   421.6419  ]], dtype=float32)", "'R_curve': (0,0)")            
+
         self.fit_instructions = eval(attrs)
+        if 'R_curve' in self.fit_instructions:
+            hdul = pyfits.open("jwst_nirspec_prism_disp.fits")
+            self.fit_instructions["R_curve"] = np.c_[10000*hdul[1].data["WAVELENGTH"], hdul[1].data["R"]]
         ''' ''' 
         #self.fit_instructions = eval(file.attrs["fit_instructions"])
         self.fitted_model = fitted_model(self.galaxy, self.fit_instructions)

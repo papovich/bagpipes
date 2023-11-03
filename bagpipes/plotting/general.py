@@ -15,6 +15,7 @@ from scipy.ndimage.filters import gaussian_filter
 from .. import utils
 
 tex_on = find_executable("latex")
+#tex_on=False
 
 if not tex_on:
     print("Bagpipes: Latex distribution not found, plots may look strange.")

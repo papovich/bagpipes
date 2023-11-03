@@ -285,7 +285,10 @@ class star_formation_history:
 
     def iyer2019(self, sfr, param):
         tx = param["tx"]
-        iyer_param = np.hstack([10., np.log10(param["sfr"]), len(tx), tx])
+        #iyer_param = np.hstack([10., np.log10(param["sfr"]), len(tx), tx])
+        # CJP edited this to use param['massformed'] instead of 10:
+        iyer_param = np.hstack([ param['massformed'], np.log10(param["sfr"]), len(tx), tx])
+        
         iyer_sfh, iyer_times = db.tuple_to_sfh(iyer_param, self.redshift)
         iyer_ages = self.age_of_universe - iyer_times[::-1]*10**9
 
