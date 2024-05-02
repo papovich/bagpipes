@@ -122,13 +122,28 @@ class prior(object):
 
     def Gaussian(self, value, limits, hyper_params):
         """ Gaussian prior between limits with specified mu and sigma. """
-        mu = hyper_params["mu"]
+        mu = hyper_params["mu"] 
         sigma = hyper_params["sigma"]
 
         uniform_max = erf((limits[1] - mu)/np.sqrt(2)/sigma)
         uniform_min = erf((limits[0] - mu)/np.sqrt(2)/sigma)
         value = (uniform_max-uniform_min)*value + uniform_min
         value = sigma*np.sqrt(2)*erfinv(value) + mu
+
+        return value
+
+    # added by CJP: 
+    def LogNormal(self, value, limits, hyper_params):
+        """ LogNormal prior between limits with specified mu and sigma.  This is the Gaussian prior where x ~ ln(x) """
+        mu = hyper_params["mu"] # should be in log10
+        sigma = hyper_params["sigma"] # should be in log10
+        # limits should be linear (this so will the returned value!!) 
+
+        uniform_max = erf((np.log10(limits[1]) - mu)/np.sqrt(2)/sigma)
+        uniform_min = erf((np.log10(limits[0]) - mu)/np.sqrt(2)/sigma)
+
+        value = (uniform_max-uniform_min)*value + uniform_min
+        value = np.power(10.0,  (sigma*np.sqrt(2)*erfinv(value) + mu ) )
 
         return value
 
