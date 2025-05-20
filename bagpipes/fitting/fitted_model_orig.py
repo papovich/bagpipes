@@ -95,23 +95,17 @@ class fitted_model(object):
                         self.hyper_params[-1][hyp_key] = all_vals[i]
 
             # Find any parameters which mirror the value of a fit param.
-            ''' 
-            CJP added this if statement to avoid errors in 
-            the all_vals[i] in all_keys and all_vals[i]=="dirichlet"
-            problem
-            '''
-            if len(np.shape(all_vals[i])) == 0 : 
-                if all_vals[i] in all_keys:
-                    self.mirror_pars[all_keys[i]] = all_vals[i]
+            if all_vals[i] in all_keys:
+                self.mirror_pars[all_keys[i]] = all_vals[i]
 
-                if all_vals[i] == "dirichlet":
-                    n = all_vals[all_keys.index(all_keys[i][:-6])]
-                    comp = all_keys[i].split(":")[0]
-                    for j in range(1, n):
-                        self.params.append(comp + ":dirichletr" + str(j))
-                        self.pdfs.append("uniform")
-                        self.limits.append((0., 1.))
-                        self.hyper_params.append({})
+            if all_vals[i] == "dirichlet":
+                n = all_vals[all_keys.index(all_keys[i][:-6])]
+                comp = all_keys[i].split(":")[0]
+                for j in range(1, n):
+                    self.params.append(comp + ":dirichletr" + str(j))
+                    self.pdfs.append("uniform")
+                    self.limits.append((0., 1.))
+                    self.hyper_params.append({})
 
         # Find the dimensionality of the fit
         self.ndim = len(self.params)
